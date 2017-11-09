@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1,maximum-scale=1">
+  <title>Datetime</title>
+  <link rel="stylesheet" href="../mobile-picker.css">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="container">
+    <div>
+      <label for="">比赛时间：</label>
+      <input type="text" id="time">
+    </div>
+    <div class="print">
+      <div>选择结果：</div>
+      <div>value: <span id="value"></span></div>
+      <div>result: <span id="result"></span></div>
+    </div>
+  </div>
+<script src="../mobile-picker.js"></script>
+<script>
+var year = (new Date()).getFullYear();
+var times = [{value: year + '年',code: year },{value: (year + 1) + '年', code: year + 1}];
+new Picker({
+  target: 'time',
+  data: times,
+  autoFill: false,
+  confirm: function(value, result){
+    var str = [];
+    for(var i = 0, len = result.length; i < len; i++){
+      str.push(result[i].code);
+    }
+    this.target.value = str.slice(0,3).join('-') + ' ' + str.slice(-2).join(':');
+    document.getElementById('value').innerText = value;
+    document.getElementById('result').innerText = JSON.stringify(result)
+  },
+  select: function(scrollIndex,result){
+    if(scrollIndex == 0){//选择了年份
+      this.setScroll(scrollIndex + 1, getMonth(result))
+    } else if(scrollIndex == 1){//选择了月份
+      this.setScroll(scrollIndex + 1, getDay(result))
+    } else if(scrollIndex == 2){//选择了日
+      this.setScroll(scrollIndex + 1, getHours(result));
+    } else if(scrollIndex == 3) {//选择了时
+      this.setScroll(scrollIndex + 1, getMinutes(result));
+    }
+  },
+})
+function getMonth(result){
+  var arr = [], now = new Date();
+  var start = result[0].code == now.getFullYear() ? now.getMonth() + 1 : 1;
+  for(var i = start; i <= 12; i++){
+    arr.push({value: i + '月',code: i});
+  }
+  return arr;
+}
+function getDay(result){
+  var year = result[0].code, month = result[1].code;
+  var now = new Date();
+  var start = year == now.getFullYear() && month == now.getMonth() + 1 ? now.getDate() : 1;
+  var key = [1,3,5,7,8,10,12].indexOf(month) != -1 ? 31 : ([4,6,9,11].indexOf(month) != -1 ? 30 : (year % 400 == 0 || year % 100 !=0 && year % 4 == 0 ) ? 29 : 28);
+  var arr = [];
+  for(var i = start; i <= key; i++){
+    arr.push({value: i + '日',code: i});
+  }
+  return arr;
+}
+function getHours(result){
+  var arr = [], now = new Date();
+  var start = result[0].code == now.getFullYear() && result[1].code == now.getMonth() + 1 && now.getDate() == result[2].code ? now.getHours() : 1;
+  for(var i = start; i <24; i++){
+    var value = ('00'+i).slice(-2)
+    arr.push({value: value +'时', code: value})
+  }
+  return arr;
+}
+function getMinutes(result){
+  var arr = [], now = new Date();
+  var start = result[0].code == now.getFullYear() && result[1].code == now.getMonth() + 1 && now.getDate() == result[2].code && now.getHours() == +result[3].code ? now.getMinutes() : 1;
+  for(var i = start; i <60; i++){
+    var value = ('00'+i).slice(-2);
+    arr.push({value: value +'分',code: value})
+  }
+  return arr;
+}
+</script>
+</body>
+</html>

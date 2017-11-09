@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1,maximum-scale=1">
+  <title>Async</title>
+  <link rel="stylesheet" href="../mobile-picker.css">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="container">
+    <div>
+      <label for="">地区</label>
+      <input type="text" id="area">
+    </div>
+    <div class="print">
+      <div>选择结果：</div>
+      <div>value: <span id="value"></span></div>
+      <div>result: <span id="result"></span></div>
+    </div>
+  </div>
+<script src="../mobile-picker.js"></script>
+<script>
+function getDistrict(code){
+ var data = {
+  "code_440330" : [{name: '罗湖区'},{name: '南山区'},{name: '福田区'},{name: '龙华新区'},{name: '龙岗区'},{name: '宝安区'}],
+  "code_440100": [{name: '海珠区',code:'440105'},{name: '天河区',code: "440106",list:[{name: '黄埔大道'},{name: '中山大道'},{name: '华夏路'}]}],
+  "code_440700":  [{name: '台山市'},{name: '鹤山市'},{name: '开平市'},{name: '新会区'},{name: '恩平市'}],
+  "code_330100": [{name: '桐庐县'},{name: '江干区'},{name: '西湖区'},{name: '下城区' }],
+  "code_330200": [{name: '江东区'},{name: '江北区'},{name: '高新区'},{name:'海曙区'},{name: '象山区'},{name:' 慈溪市'}]
+  }
+  return data['code_'+code] || [];
+}
+var city = [
+  {
+    name: '北京市',
+    code:"110000",
+    list: [
+      {name: '东城区',code: '110101'},{name: '西城区',code: '110102'},{name: '朝阳区',code: '110105'},{name: '丰台区',code: '110106'},{name: '海淀区',code: "110108"},{name: '房山区',code:'110111'}
+    ]
+  },
+  {
+    name: '广东省',
+    code: "440000",
+    list:[
+      {name: '广州市',code: "440100"},
+      {name: '深圳市',code: '440330'},
+      {name: '东莞市',code:'441900'},
+      {name: '江门市',code: '440700'},
+    ]
+  },
+  {
+    name: '浙江省',
+    list: [
+      {name: '杭州市',code: "330100"},
+      {name: '宁波市',code: "330200"}
+    ]
+  }
+];
+var picker = new Picker({
+    target: 'area',
+    data: city,
+    textKey: 'name',
+    childKey: 'list',
+    confirm: function(value, result){
+      var str = [];
+      for(var i = 0, len = result.length; i < len; i++){
+        str.push(result[i].name);
+      }
+      this.target.value = str.join('-');
+      document.getElementById('value').innerText = value;
+      document.getElementById('result').innerText = JSON.stringify(result)
+    },
+    select: function(scrollIndex,result,index,haschild){
+      var city = result[scrollIndex];//获取结果集中的当前项
+      var that = this;
+      //当选择的是不是城市级别或者选择的是直辖市或者当前选择的城市有子级列表（没有的在请求后会被缓存）则不做操作
+      if(scrollIndex !== 1 || "11|12|31|50".indexOf(city.code.substring(0, 2)) >= 0 || haschild) return;
+      this.setScroll(scrollIndex + 1, []);//创建空白的下一级选择器，之所以这样做是防止页面抖动
+      that.setLock(true);//因为是异步请求，数据没返回之前锁定选择器,请留意效果图中的确定按钮
+      setTimeout(function(){//这里模拟一个1秒钟的异步请求
+        var data = getDistrict(city.code);//拿到异步数据
+        if(data.length){
+          that.setScroll(scrollIndex + 1, data);//更新下一级选择器的数据
+        } else {
+          that.removeScroll(scrollIndex + 1);//没有数据，则移除之前防止抖动的选择器
+        }
+        that.setLock(false);//请求完毕，解锁
+      },1000)
+    },
+  })
+</script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1,maximum-scale=1">
+  <title>AMD</title>
+  <link rel="stylesheet" href="../mobile-picker.css">
+  <link rel="stylesheet" href="./style.css">
+  <style>
+    .mp-mask {background: rgba(255,255,0,.5)}
+    .mp-header{background: #249ff1;color:#fff;}
+    .mp-list-wrap li {color:#ff8e01;}
+    .mp-line{border-color: #249ff1;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <label for="">水果：</label>
+    <input type="text" id="fruit">
+  </div>
+  <div style="height:900px;">d</div>
+<script src="https://cdn.bootcss.com/require.js/2.3.5/require.js"></script>
+<script>
+require(['../mobile-picker'],function(Picker){
+  var fruit = ['苹果','香蕉','火龙果','芒果','百香果'];
+  new Picker({
+    target: 'fruit',
+    data: fruit,
+    value: '火龙果',
+    confirm: function(value,data){
+      console.log(value,data)
+    }
+  });
+})
+
+</script>
+</body>
+</html>

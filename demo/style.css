@@ -1,0 +1,29 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+input {
+  outline: none;
+  border: 1px solid #d5d5d5;
+  padding: .3em 1em;
+  width: 200px;
+}
+body {
+  background: #f2f2f2;
+}
+.container > div {
+  margin: 10px 0;
+}
+.container {
+  padding: 1rem;
+  font-size: .875rem;
+}
+.print {
+  margin-top: 30px;
+}
+.print div {
+  margin: 10px 0;
+}
+.print span {
+  color: #249ff1;
+}

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1,maximum-scale=1">
+  <title>City</title>
+  <link rel="stylesheet" href="../mobile-picker.css">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="container">
+    <div>
+      <label for="">出发地</label>
+      <input type="text" id="start">
+    </div>
+    <div>
+      <label for="">目的地</label>
+      <input type="text" id="end">
+    </div>
+    <div class="print">
+      <div>选择结果：</div>
+      <div>startValue: <span id="startValue"></span></div>
+      <div>startResult: <span id="startResult"></span></div>
+      <div style="margin: 10px 0">--------------------</div>
+      <div>endValue: <span id="endValue"></span></div>
+      <div>endResult: <span id="endResult"></span></div>
+    </div>
+  </div>
+<script src="../mobile-picker.js"></script>
+<script>
+var city = [
+  {
+    name: '北京市',
+    code:"110000",
+    list: [
+      {name: '东城区'},{name: '西城区'},{name: '朝阳区'},{name: '丰台区'},{name: '海淀区'},{name: '房山区'}
+    ]
+  },
+  {
+    name: '广东省',
+    code: "440000",
+    list:[
+      {
+        name: '广州市',
+        code: "440100",
+        list: [
+          {name: '海珠区',code:'440105'},
+          {name: '天河区',code: "440106",list:[{name: '黄埔大道'},{name: '中山大道'},{name: '华夏路'}]}
+        ]
+      },
+      {
+        name: '深圳市',
+        list: [{name: '罗湖区'},{name: '南山区'},{name: '福田区'},{name: '龙华新区'},{name: '龙岗区'},{name: '宝安区'}]
+      },
+      {name: '东莞市'},
+      {
+        name: '江门市',
+        list: [
+          {name: '台山市'},{name: '鹤山市'},{name: '开平市'},{name: '新会区'},{name: '恩平市'}
+        ]
+      }
+    ]
+  },
+  {
+    name: '浙江省',
+    list: [
+      {
+        name: '杭州市',
+        list: [{name: '桐庐县'},{name: '江干区'},{name: '西湖区'},{name: '下城区' }]
+      },{
+        name: '宁波市',
+        list: [{name: '江东区'},{name: '江北区'},{name: '高新区'},{name:'海曙区'},{name: '象山区'},{name:' 慈溪市'}]
+      }
+    ]
+  }
+];
+new Picker({
+  target: document.getElementById('start'),
+  data: city,
+  textKey: 'name',
+  childKey: 'list',
+  confirm: function(value,result){
+    document.getElementById('startValue').innerText = value;
+    document.getElementById('startResult').innerText = JSON.stringify(result);
+  }
+});
+new Picker({
+  target: 'end',
+  data: city,
+  textKey: 'name',
+  autoFill: false,
+  childKey: 'list',
+  confirm: function(value,result){
+    document.getElementById('endValue').innerText = value;
+    document.getElementById('endResult').innerText = JSON.stringify(result);
+    //结果处理后再显示
+    var text = [];
+    for(var i = 0; i < result.length; i++){
+      text.push(result[i].name);
+    }
+    this.target.value = text.join('-');//this.target取得当前的目标元素
+  }
+});
+</script>
+</body>
+</html>
