@@ -54,7 +54,7 @@
     | lock        | Boolean                | false   | 否      | 是否锁定picker，当picker锁定时确认选择将不会执行，这在异步请求等待数据时可以用上，防止数据不完整 |
     | confirm     | Function(value,result) | 无      | 否      | 确定选择后的回调函数，接收两个参数，value为选择器文本拼接后的结果，默认用于填充元素，result为选择的原始数据出去子级列表后的集合,如[{text:'广州市'}，{text: '天河区'}] |
 	| cancel      | Function               | 无      | 否      | 取消选择后的回调函数 |
-    | select      | Function(scrollIndex,result,index,haschild)| 执行某个层级的选择时回调函数，接收参数分别为：当前所在的层级(从0计数)，当前已选择的结果，当前层级数据集合选中的索引值，是否有子级数据集合，详细见后面例子 |
+    | select      | Function(scrollIndex,result,index,haschild)| 无| 否 |执行某个层级的选择时回调函数，接收参数分别为：当前所在的层级(从0计数)，当前已选择的结果，当前层级数据集合选中的索引值，是否有子级数据集合，详细见后面例子 |
 
 4. **方法列表**
 
