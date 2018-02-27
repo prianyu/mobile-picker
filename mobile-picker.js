@@ -1,76 +1,105 @@
 ;(function(global){
-    var pickerIndex = 0;
+    var PICKERCOUNT = 0;
     var body = document.getElementsByTagName("body")[0];
     var coordinate = {start: {y:0},end: {y:0,status:true}, move: {y:0}}
-    function loop(start,end,handle){
-      for(var i = start; i < end; i++){
-        typeof handle === 'function' && handle(i);
-      }
-    }
-    function isFunc(name){
-      return typeof name === 'function';
-    }
-    function isArray(o){
-      return Object.prototype.toString.call(o) === '[object Array]';
-    }
-    function damping(value) {//阻尼运算
-      var steps = [20, 40, 60, 80, 100],rates = [0.5, 0.4, 0.3, 0.2, 0.1];
-      var result = value,len = steps.length;
-      while (len--) {
-        if (value > steps[len]) {
-          result = (value - steps[len]) * rates[len];
-          for (var i = len; i > 0; i--) {
-              result += (steps[i] - steps[i - 1]) * rates[i - 1];
-          }
-          result += steps[0] * 1;
-          break;
+    var Util = {
+      removeClass: function(el, className) {
+        var reg = new RegExp('(\\s|^)' + className + '(\\s|$)');
+        el.className = el.className.replace(reg, ' ').replace(/^\s\s*/, '').replace(/\s\s*$/, '');
+      },
+      addClass: function(el, className) {
+        !Util.hasClass(el,className) && (el.className += (el.className ? ' ' : '') + className);
+      },
+      hasClass: function(el, className) {
+        return el.className && new RegExp('(^|\\s)' + className + '(\\s|$)').test(el.className);
+      },
+      loop: function(start,end,handle){
+        for(var i = start; i < end; i++){
+          Util.isFunc(handle) && handle(i);
         }
+      },
+      isFunc: function(name){
+        return typeof name === 'function';
+      },
+      isArray: function(o) {
+        return Object.prototype.toString.call(o) === '[object Array]';
+      },
+      isObject: function(o) {
+        return typeof o === 'object';
+      },
+      damping: function (value) {//阻尼运算
+        var steps = [20, 40, 60, 80, 100],rates = [0.5, 0.4, 0.3, 0.2, 0.1];
+        var result = value,len = steps.length;
+        while (len--) {
+          if (value > steps[len]) {
+            result = (value - steps[len]) * rates[len];
+            for (var i = len; i > 0; i--) {
+                result += (steps[i] - steps[i - 1]) * rates[i - 1];
+            }
+            result += steps[0] * 1;
+            break;
+          }
+        }
+        return result;
+      },
+      createEle: function(parent, tag, className, html) {
+        var ele = document.createElement(tag);
+        className && Util.addClass(ele,className);
+        html && (ele.innerHTML = html);
+        parent && parent.appendChild(ele);
+        return ele;
+      },
+      getEle: function(ctx, selector) {
+        return ctx.querySelector(selector);
       }
-      return result;
     }
     function Picker(config){
-      this.index = ++pickerIndex;//当前选择器的索引
-      this.target = typeof config.target === 'string' ? document.getElementById(config.target) : config.target;//触发选择器的dom元素
+      this.index = ++PICKERCOUNT;//当前选择器的索引
+      this.target = config.target instanceof HTMLElement ? config.target : typeof config.target === "string" ? Util.getEle(document,config.target) : null;//触发选择器的dom元素
       this.data  = config.data || [];//需要显示的数据
-      this.value = config.value ? (isArray(config.value) ? config.value : config.value.split(',')) : [];//选择器默认值
+      this.value = config.value ? (Util.isArray(config.value) ? config.value : config.value.split(',')) : [];//选择器默认值
       this.childKey = config.childKey || 'child';//子数据索引名
       this.valueKey = config.valueKey || 'value';//用于索引初始值的key
       this.textKey = config.textKey || 'value';//用于显示的key
       this.autoFill = !(config.autoFill === false);//选择确定后是否填充到目标元素
       this.confirm = config.confirm;//确定选择的回调
       this.cancel = config.cancel;//取消回调
-      this.select = config.select;//滚动结束后的回调
-      this.lock = config.lock === true;//
-      this.className = config.className || '';
+      this.initCallback = config.initCallback;//实例化完成的回调
+      this.select = config.select;//单个列表选择后的回调
+      this.lock = config.lock === true;//锁定确定按钮，用于异步加载时等待使用
+      this.className = config.className || '';//定制的类名
       this.init();
     }
     Picker.prototype = {
       constructor: Picker,
       init: function(){
-        this.initConfig();
-        var container = document.createElement('div');
+        this.initResult();
         var html = '<div class="mp-container"><div class="mp-header"><span class="mp-cancel">取消</span><span class="mp-confirm'+(this.lock ? ' disabled' : '')+'">确定</span></div><div class="mp-content"><div class="mp-shadowup"></div><div class="mp-shadowdown"></div><div class="mp-line"></div><div class="mp-box"></div></div>';
-        container.className = 'mp-mask' + (this.className ? ' '+this.className : '');
+        var container = Util.createEle(body,'div','mp-mask',html);
+        this.className && Util.addClass(container,this.className);
         container.id = 'mobilePicker'+this.index;
-        container.innerHTML = html;
-        body.appendChild(container);
         this.container = container;
-        this.box = container.querySelector('.mp-box')//用于包含滚动元素的容器
-        this.createScroll(this.data);//创建第一个滚动元素
+        this.box = Util.getEle(container, '.mp-box')//用于包含滚动元素的容器
+        this.createScroll(this.data);//核心方法：创建滚动的元素
         this.value = [];
         this.bindEvent();//绑定事件
+        this.finisInit();
       },
-      initConfig: function(config){
+      initResult: function(config){
         this.scrollCount = 0;//已渲染的数据层级数
-        this.selectIndex = [];//选中的内容索引
-        this.result = [];//选择器的结果
-        this.offset = [];//滚动器的偏移量
+        this.selectIndex = [];//每个层级选中的索引集合
+        this.result = [];//选择器最终的结果
+        this.offset = [];//每个层级滚动的偏移量集合
+      },
+      finisInit: function(){
+        var value = this.fillResult();
+        Util.isFunc(this.initCallback) && this.initCallback(value,this.result);
       },
       update: function(options){
         for(var i in options) {
           this[i] = options[i];
         }
-        this.initConfig()
+        this.initResult()
         this.box.innerHTML = '';
         this.createScroll(this.data);
         this.value = [];
@@ -83,37 +112,35 @@
         return arr;
       },
       setResult: function(data){
-        if(typeof data !== 'object') return data;
+        if(!Util.isObject(data)) return data;
         var temp = {};
         for(var key in data){
-          key != this.childKey && (temp[key] = data[key])
+          key != this.childKey && (temp[key] = data[key]);
         }
         return temp;
       },
       createScroll: function(data){
-        var scroll = document.createElement('div');
-        scroll.className = 'mp-list-wrap';
-        scroll.innerHTML = '<ul></ul>';
+        var scroll = Util.createEle(this.box,'div','mp-list-wrap','<ul></ul>');
         scroll.scrollIndex = this.scrollCount++;
-        this.box.appendChild(scroll);
-        this.addList(scroll.querySelector('ul'), data);
+        this.addList(Util.getEle(scroll, 'ul'), data);
       },
       getText: function(data){
-        return typeof data === 'object' ? data[this.textKey] : data;
+        return Util.isObject(data) ? data[this.textKey] : data;
       },
       addList: function(parent, data){
         var html = '',that = this;
         var index = 0,scrollIndex = parent.parentNode.scrollIndex,text = '';
-        loop(0,data.length,function(i){
+        Util.loop(0,data.length,function(i){
           text = that.getText(data[i]);
           html += '<li>'+text+'</li>';
-          if(that.value.length && that.value[scrollIndex] && (typeof data[i] === 'object' && data[i][that.valueKey] === that.value[scrollIndex] || data[i] == that.value[scrollIndex])){//说明当前有默认要选中的值
+          //初始化时有默认值，应该选中当前值，否则index就会为0，即选中第一个
+          if(that.value.length && that.value[scrollIndex] && (Util.isObject(data[i]) && data[i][that.valueKey] === that.value[scrollIndex] || data[i] == that.value[scrollIndex])){
             index = i;
           }
         });
         parent.innerHTML = html;
         this.offset.push(0);
-        this.selectItem(data, index, scrollIndex);
+        this.selectItem(data, index, scrollIndex);//选中并创建下一级选择器
       },
       updateList: function(index,data){
         var dom = this.box.childNodes[index];
@@ -121,7 +148,7 @@
           this.createScroll(data);
           return;
         }
-        dom = dom.querySelector('ul');
+        dom = Util.getEle(dom,'ul');
         this.addList(dom, data);
       },
       setScroll: function(index,data,value,callback) {
@@ -138,15 +165,21 @@
         }
         this.updateList(index,data);
         this.value = [];
-        isFunc(callback) && callback(index,this.result);
+        Util.isFunc(callback) && callback(index,this.result);
       },
       removeScroll: function(index){
         var that = this;
-        this.box.removeChild(this.box.childNodes[index]);
-        this.scrollCount--;
-        var wraps = that.box.querySelectorAll('.mp-list-wrap');
+        var node = this.box.childNodes[index];
+        if(node){
+          this.box.removeChild(node);
+          this.scrollCount--;
+          this.calcWidth();
+        }
+      },
+      calcWidth: function() {
+        var wraps = this.box.querySelectorAll('.mp-list-wrap');
         for(var m = 0; m < wraps.length; m++){
-          wraps[m].style.width = (100 / that.scrollCount) + '%';
+          wraps[m].style.width = (100 / this.scrollCount) + '%';
         }
       },
       selectItem:function(data, index, scrollIndex){//params: 数据，选中的索引，当前scroll的索引
@@ -156,25 +189,20 @@
         this.selectIndex[scrollIndex] = index;
         this.result[scrollIndex] = this.setResult(data[index]);
         this.setOffset(scrollIndex, index);
-        if(data[index] && data[index][that.childKey] && isArray(data[index][that.childKey]) && data[index][that.childKey].length){//存在子元素
+        if(data[index] && data[index][that.childKey] && Util.isArray(data[index][that.childKey]) && data[index][that.childKey].length){//存在子元素
           if(that.scrollCount < scrollIndex + 2){//如果上一次的ul个数少于当前需要的个数，则创建新的ul
             that.createScroll(data[index][that.childKey]);
           } else {
             that.updateList(scrollIndex + 1, data[index][that.childKey]);
           }
-        } else {
+        } else {//说明当前的滚动器数目多余需要的，移除多余的
           for ( var j = oldScrollCount - 1, len = that.selectIndex.length; j >= len; j-- ) {//删除多余的ul
             that.removeScroll(j);
           }
         }
-
         this.scrollIndex = this.offset.length = this.selectIndex.length;
-        //计算滚动对象的宽度
-        var wraps = that.box.querySelectorAll('.mp-list-wrap');
-        for(var m = 0; m < wraps.length; m++){
-          wraps[m].style.width = (100 / that.scrollCount) + '%';
-        }
-        isFunc(that.select) && that.select(scrollIndex,this.result,index,data[index] && data[index][that.childKey] && isArray(data[index][that.childKey]) && data[index][that.childKey].length);
+        this.calcWidth();//计算滚动对象的宽度
+        Util.isFunc(that.select) && that.select(scrollIndex,this.result,index,data[index] && data[index][that.childKey] && isArray(data[index][that.childKey]) && data[index][that.childKey].length);
       },
       fillContent: function(content){
         var tagName  = this.target.tagName.toLowerCase();
@@ -184,10 +212,22 @@
           this.target.innerText = content;
         }
       },
+      fillResult: function(){
+        var value = '';
+          for(var i = 0,len = this.result.length; i < len; i++){
+            if(typeof this.result[i] === 'object'){
+              this.result[i][this.textKey] && (value += this.result[i][this.textKey]);
+            } else {
+              value += this.result[i];
+            }
+          }
+          this.autoFill && this.fillContent(value);
+          return value;
+      },
       hide: function(){
         var that = this;
-        this.container.querySelector('.mp-container').style.transform= 'translate3d(0,100%,0)';
-        body.className = body.className.replace('mp-body','');
+        Util.getEle(this.container,'.mp-container').style.transform = 'translate3d(0,100%,0)';
+        Util.removeClass(body, 'mp-body');
         setTimeout(function(){
           that.container.style.visibility = 'hidden';
         },250)
@@ -195,9 +235,9 @@
       show: function(){
         var that = this;
         that.container.style.visibility = 'visible';
-        body.className = body.className + ' mp-body';
+        Util.addClass(body, 'mp-body');
         setTimeout(function(){
-          that.container.querySelector('.mp-container').style.transform= 'translate3d(0,0,0)';
+          Util.getEle(that.container,'.mp-container').style.transform= 'translate3d(0,0,0)';
         },0)
       },
       setOffset: function(scrollIndex, index){
@@ -207,14 +247,15 @@
         this.offset[scrollIndex] = offset;
       },
       setLock: function(value){
-        var confirm = this.container.querySelector('.mp-confirm'),old = this.lock;
+        var confirm = Util.getEle(this.container,'.mp-confirm'),old = this.lock;
         this.lock = value !== false;
         if(old !== this.lock) {
-          confirm.className = this.lock ? confirm.className + ' disabled' : confirm.className.replace(' disabled','');
+          confirm.className = this.lock ? Util.addClass(confirm,'disabled') : Util.removeClass(confirm, 'disabled');
         }
       },
       bindEvent: function(){
         var that = this;
+        console.log(that)
         that.target.disabled = true;
         ['touchstart','touchend','touchmove'].forEach(function(action){
             that.box.parentNode.addEventListener(action,function(event){
@@ -239,11 +280,11 @@
                 var distance = coordinate.start.y - coordinate.move.y;
                 var os = distance + that.offset[index];
                 if(os < 0){//已经滑到最顶部
-                  target.style.transform = 'translate3d(0,'+ (damping(-os)) +'px,0)';
+                  target.style.transform = 'translate3d(0,'+ (Util.damping(-os)) +'px,0)';
                 } else if(os <= scrollHeight){
                   target.style.transform = 'translate3d(0,-'+ os +'px,0)';
                 } else {//超过了整体的高度
-                  target.style.transform = 'translate3d(0,-'+(scrollHeight + damping(os-scrollHeight))+'px,0)';
+                  target.style.transform = 'translate3d(0,-'+(scrollHeight + Util.damping(os-scrollHeight))+'px,0)';
                 }
                 break;
               case 'touchend':
@@ -266,23 +307,15 @@
           that.show();
         });
         //  用click事件代替touchstart防止点透
-        that.container.querySelector('.mp-cancel').addEventListener('click',function(){
+        Util.getEle(that.container,'.mp-cancel').addEventListener('click',function(){
           that.hide();
-          isFunc(that.cancel) && that.cancel();
+          Util.isFunc(that.cancel) && that.cancel();
         },false);
-        that.container.querySelector('.mp-confirm').addEventListener('click',function(){
+        Util.getEle(that.container,'.mp-confirm').addEventListener('click',function(){
           if(that.lock) return;
-          var value = '';
-          for(var i = 0,len = that.result.length; i < len; i++){
-            if(typeof that.result[i] === 'object'){
-              that.result[i][that.textKey] && (value += that.result[i][that.textKey]);
-            } else {
-              value += that.result[i];
-            }
-          }
-          that.autoFill && that.fillContent(value);
+          var value = that.fillResult();
           that.hide();
-          isFunc(that.confirm) && that.confirm(value, that.result);
+          Util.isFunc(that.confirm) && that.confirm(value, that.result);
         });
       }
     }

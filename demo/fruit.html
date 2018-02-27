@@ -21,6 +21,9 @@ new Picker({
   value: '火龙果',
   confirm: function(value,data){
     console.log(value,data)
+  },
+  initCallback: function(value,result){
+    console.log(value,result)
   }
 });
 </script>
