@@ -43,7 +43,7 @@
 
 	| 参数名称     | 参数类型                | 默认值   |是否必须  |  参数说明  |
 	| ----------- | -----------------------|:-------:|:-------:|-----------|
-	| target      | HTMLElement|String     | 无      | 是      | 触发选择器的html元素，可为原生DOM对象或者html标签的的id名称 |
+	| target      | HTMLElement|String     | 无      | 是      | 触发选择器的html元素，可为原生DOM对象或者符合querySelector的选择器名称 |
 	| data        | Array: [String|Object] |[]       | 是      | 选择项目列表数组，数组项的值可以为字符串，也可以为对象。显示规则见textKey |
 	| textKey     | String                 | 'value' | 否      | 用于显示列表的键名，当data数组元素为字符串时不起作用，当为对象时将取对象对应的键的值进行显示 |
 	| value       | String|Array           | []      | 否      | picker默认值。当为一级picker时可以选择字符串，当为多级的picker时需传入数组,需要组合valueKey使用 |
@@ -55,6 +55,7 @@
     | confirm     | Function(value,result) | 无      | 否      | 确定选择后的回调函数，接收两个参数，value为选择器文本拼接后的结果，默认用于填充元素，result为选择的原始数据出去子级列表后的集合,如[{text:'广州市'}，{text: '天河区'}] |
 	| cancel      | Function               | 无      | 否      | 取消选择后的回调函数 |
     | select      | Function(scrollIndex,result,index,haschild)| 无| 否 |执行某个层级的选择时回调函数，接收参数分别为：当前所在的层级(从0计数)，当前已选择的结果，当前层级数据集合选中的索引值，是否有子级数据集合，详细见后面例子 |
+    | initCallback | Function(value, result) | 无 | 否  | 选择器初始化后的回调函数，接收两个参数，value为选择器文本拼接后的结果，默认用于填充元素，result为选择的原始数据出去子级列表后的集合,如[{text:'广州市'}，{text: '天河区'}] |
 
 4. **方法列表**
 

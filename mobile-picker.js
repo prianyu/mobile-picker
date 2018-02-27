@@ -11,7 +11,7 @@
         !Util.hasClass(el,className) && (el.className += (el.className ? ' ' : '') + className);
       },
       hasClass: function(el, className) {
-        return el.className && new RegExp('(^|\\s)' + className + '(\\s|$)').test(el.className);
+        return !!el.className && new RegExp('(^|\\s)' + className + '(\\s|$)').test(el.className);
       },
       loop: function(start,end,handle){
         for(var i = start; i < end; i++){
@@ -51,6 +51,9 @@
       },
       getEle: function(ctx, selector) {
         return ctx.querySelector(selector);
+      },
+      setTransform: function(el,y) {
+        el.style.transform = 'translate3d(0,'+ y +'px,0)';
       }
     }
     function Picker(config){
@@ -202,7 +205,7 @@
         }
         this.scrollIndex = this.offset.length = this.selectIndex.length;
         this.calcWidth();//计算滚动对象的宽度
-        Util.isFunc(that.select) && that.select(scrollIndex,this.result,index,data[index] && data[index][that.childKey] && isArray(data[index][that.childKey]) && data[index][that.childKey].length);
+        Util.isFunc(that.select) && that.select(scrollIndex,this.result,index,data[index] && data[index][that.childKey] && Util.isArray(data[index][that.childKey]) && data[index][that.childKey].length);
       },
       fillContent: function(content){
         var tagName  = this.target.tagName.toLowerCase();
@@ -215,7 +218,7 @@
       fillResult: function(){
         var value = '';
           for(var i = 0,len = this.result.length; i < len; i++){
-            if(typeof this.result[i] === 'object'){
+            if(Util.isObject(this.result[i])){
               this.result[i][this.textKey] && (value += this.result[i][this.textKey]);
             } else {
               value += this.result[i];
@@ -243,19 +246,18 @@
       setOffset: function(scrollIndex, index){
         var scroll = this.box.childNodes[scrollIndex].querySelector('ul');
         var offset = scroll.childNodes[0] ? scroll.childNodes[0].offsetHeight * index : 0;
-        scroll.style.transform = 'translate3d(0,-'+offset+'px,0)';
+        Util.setTransform(scroll, -offset)
         this.offset[scrollIndex] = offset;
       },
       setLock: function(value){
         var confirm = Util.getEle(this.container,'.mp-confirm'),old = this.lock;
         this.lock = value !== false;
         if(old !== this.lock) {
-          confirm.className = this.lock ? Util.addClass(confirm,'disabled') : Util.removeClass(confirm, 'disabled');
+          this.lock ? Util.addClass(confirm,'disabled') : Util.removeClass(confirm, 'disabled');
         }
       },
       bindEvent: function(){
         var that = this;
-        console.log(that)
         that.target.disabled = true;
         ['touchstart','touchend','touchmove'].forEach(function(action){
             that.box.parentNode.addEventListener(action,function(event){
@@ -280,11 +282,11 @@
                 var distance = coordinate.start.y - coordinate.move.y;
                 var os = distance + that.offset[index];
                 if(os < 0){//已经滑到最顶部
-                  target.style.transform = 'translate3d(0,'+ (Util.damping(-os)) +'px,0)';
+                  Util.setTransform(target, Util.damping(-os));
                 } else if(os <= scrollHeight){
-                  target.style.transform = 'translate3d(0,-'+ os +'px,0)';
+                  Util.setTransform(target, -os);
                 } else {//超过了整体的高度
-                  target.style.transform = 'translate3d(0,-'+(scrollHeight + Util.damping(os-scrollHeight))+'px,0)';
+                  Util.setTransform(target, -(scrollHeight + Util.damping(os-scrollHeight)));
                 }
                 break;
               case 'touchend':
@@ -293,7 +295,7 @@
                 count = count < 0 ? 0 : Math.min(count, target.childNodes.length - 1);
                 var temp = that.offset[index];
                 that.offset[index] = count < 0 ? 0 : Math.min(count * liHeight,target.offsetHeight - 5 * liHeight)
-                target.style.transform = 'translate3d(0,-' + that.offset[index] + 'px, 0)';
+                Util.setTransform(target, -that.offset[index]);
                 coordinate.end.status = true;
                 that.selectIndex.length  = index + 1;
                 that.selectIndex[index] = count;

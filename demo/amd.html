@@ -18,13 +18,13 @@
     <label for="">水果：</label>
     <input type="text" id="fruit">
   </div>
-  <div style="height:900px;">d</div>
+  <div style="height:900px;"></div>
 <script src="https://cdn.bootcss.com/require.js/2.3.5/require.js"></script>
 <script>
 require(['../mobile-picker'],function(Picker){
   var fruit = ['苹果','香蕉','火龙果','芒果','百香果'];
   new Picker({
-    target: 'fruit',
+    target: '#fruit',
     data: fruit,
     value: '火龙果',
     confirm: function(value,data){

@@ -24,7 +24,7 @@
 var year = (new Date()).getFullYear();
 var times = [{value: year + '年',code: year },{value: (year + 1) + '年', code: year + 1}];
 new Picker({
-  target: 'time',
+  target: '#time',
   data: times,
   autoFill: false,
   confirm: function(value, result){
