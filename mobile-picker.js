@@ -1,7 +1,7 @@
 ;(function(global){
     var PICKERCOUNT = 0;
     var body = document.getElementsByTagName("body")[0];
-    var coordinate = {start: {y:0},end: {y:0,status:true}, move: {y:0}}
+    var coordinate = {start: {y:0},end: {y:0,status:true}, move: {y:0}};
     var Util = {
       removeClass: function(el, className) {
         var reg = new RegExp('(\\s|^)' + className + '(\\s|$)');
@@ -137,7 +137,7 @@
           text = that.getText(data[i]);
           html += '<li>'+text+'</li>';
           //初始化时有默认值，应该选中当前值，否则index就会为0，即选中第一个
-          if(that.value.length && that.value[scrollIndex] && (Util.isObject(data[i]) && data[i][that.valueKey] === that.value[scrollIndex] || data[i] == that.value[scrollIndex])){
+          if(that.value.length && that.value[scrollIndex] && (Util.isObject(data[i]) && data[i][that.valueKey] == that.value[scrollIndex][that.valueKey] || data[i] == that.value[scrollIndex])){
             index = i;
           }
         });
@@ -198,12 +198,13 @@
           } else {
             that.updateList(scrollIndex + 1, data[index][that.childKey]);
           }
-        } else {//说明当前的滚动器数目多余需要的，移除多余的
+        } else {//说明当前的滚动器数目多于需要的，移除多余的
           for ( var j = oldScrollCount - 1, len = that.selectIndex.length; j >= len; j-- ) {//删除多余的ul
             that.removeScroll(j);
           }
         }
-        this.scrollIndex = this.offset.length = this.selectIndex.length;
+        // this.scrollIndex = this.offset.length = this.selectIndex.length;
+        this.offset.length = this.selectIndex.length;
         this.calcWidth();//计算滚动对象的宽度
         Util.isFunc(that.select) && that.select(scrollIndex,this.result,index,data[index] && data[index][that.childKey] && Util.isArray(data[index][that.childKey]) && data[index][that.childKey].length);
       },
@@ -306,11 +307,18 @@
         });
         that.target.addEventListener('touchstart',function(event){
           (event || window.event).preventDefault();
+          //记录旧结果，用于取消恢复
+          that.oldResult = that.result.slice(0);
           that.show();
         });
         //  用click事件代替touchstart防止点透
         Util.getEle(that.container,'.mp-cancel').addEventListener('click',function(){
           that.hide();
+          //恢复旧的结果
+          that.update({
+            value: that.oldResult,
+            valueKey: that.textKey
+          });
           Util.isFunc(that.cancel) && that.cancel();
         },false);
         Util.getEle(that.container,'.mp-confirm').addEventListener('click',function(){

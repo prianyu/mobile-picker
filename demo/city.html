@@ -78,8 +78,14 @@ new Picker({
   target: document.getElementById('start'),
   data: city,
   textKey: 'name',
+  valueKey: 'name',
   childKey: 'list',
+  value: [{name: '广东省'},{name: '深圳市'},{name: '南山区'}],
   confirm: function(value,result){
+    document.getElementById('startValue').innerText = value;
+    document.getElementById('startResult').innerText = JSON.stringify(result);
+  },
+  initCallback: function(value,result) {
     document.getElementById('startValue').innerText = value;
     document.getElementById('startResult').innerText = JSON.stringify(result);
   }
