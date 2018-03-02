@@ -24,11 +24,13 @@ li,ul {list-style: none;}
 }
 .mp-shadowup {
   top: -1px;
+  background:-webkit-linear-gradient(to bottom, #FFF, rgba(255, 255, 255, .3));
   background:linear-gradient(to bottom, #FFF, rgba(255, 255, 255, .3));
   pointer-events: none;
 }
 .mp-shadowdown {
   bottom: 0;
+  background: -webkit-linear-gradient(to top, #FFF, rgba(255,255,255,.3));
   background: linear-gradient(to top, #FFF, rgba(255,255,255,.3));
   pointer-events: none;
 }
@@ -48,6 +50,8 @@ li,ul {list-style: none;}
   width: 100%;
   background: #FFF;
   font-size: 16px;
+  -webkit-transition: transform .25s;
+  -webkit-transform: translate3d(0,100%,0);
   transition: transform .25s;
   transform: translate3d(0,100%,0);
 }
@@ -83,6 +87,7 @@ li,ul {list-style: none;}
 .mp-list-wrap ul {
   position: relative;
   padding: 5em 0;
+  -webkit-transition: transform .1s ease-out;
   transition: transform .1s ease-out;
 }
 .mp-list-wrap ul:after {
@@ -107,5 +112,6 @@ li,ul {list-style: none;}
   height: 12.5em;
   overflow: hidden;
   font-size: 16px;
+  -webkit-transition: width .2s;
   transition: width .2s;
 }
