@@ -34,7 +34,7 @@
           if (value > steps[len]) {
             result = (value - steps[len]) * rates[len];
             for (var i = len; i > 0; i--) {
-                result += (steps[i] - steps[i - 1]) * rates[i - 1];
+              result += (steps[i] - steps[i - 1]) * rates[i - 1];
             }
             result += steps[0] * 1;
             break;
